@@ -1,0 +1,8 @@
+evaluationDependsOn(':service1')
+
+/**
+ * Runs the microservice1 locally
+ */
+task runService1 {
+    dependsOn ":service1:bootRun"
+}

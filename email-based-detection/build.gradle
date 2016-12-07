@@ -1,0 +1,57 @@
+//plugins
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+
+// Use Java 8 by default
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+// Version & Group
+group "$groupId"
+version "$versionNumber"
+
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url "http://repo.spring.io/snapshot" }
+        maven { url "http://repo.spring.io/milestone" }
+        maven { url 'http://repo.spring.io/plugins-release' }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+    }
+}
+
+configure(allprojects) {
+    apply plugin: 'propdeps'
+    apply plugin: 'propdeps-maven'
+    apply plugin: 'propdeps-idea'
+    apply plugin: 'propdeps-eclipse'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "http://repo.spring.io/snapshot" }
+    maven { url "http://repo.spring.io/milestone" }
+}
+
+dependencies {
+    //Spring Boot
+    compile("org.springframework.boot:spring-boot-starter-web")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+    compile("org.springframework.boot:spring-boot-devtools")
+    optional("org.springframework.boot:spring-boot-configuration-processor")
+}
+
+bootRun {
+    if (project.hasProperty('env')) {
+        args = ["--env=$env", "--spring.profiles.active=$env"]
+    } else {
+        args = ['--env=local', "--spring.profiles.active=local"]
+    }
+}
