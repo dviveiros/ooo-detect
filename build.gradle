@@ -1,8 +1,8 @@
-evaluationDependsOn(':service1')
+evaluationDependsOn(':email-based-detection')
 
 /**
- * Runs the microservice1 locally
+ * Runs the e-mail detection service locally
  */
-task runService1 {
-    dependsOn ":service1:bootRun"
+task runEmailDetection {
+    dependsOn ":email-based-detection:bootRun"
 }
