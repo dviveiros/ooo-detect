@@ -2,7 +2,6 @@
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'application'
-apply plugin: 'docker'
 
 // Use Java 8 by default
 sourceCompatibility = 1.8
@@ -38,7 +37,6 @@ buildscript {
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
         classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
-        classpath "se.transmode.gradle:gradle-docker:$gradleDockerVersion"
     }
 }
 
@@ -62,6 +60,9 @@ dependencies {
     testCompile("org.springframework.boot:spring-boot-starter-test")
     compile("org.springframework.boot:spring-boot-devtools")
     optional("org.springframework.boot:spring-boot-configuration-processor")
+
+    //Loggly
+    compile "org.logback-extensions:logback-ext-loggly:0.1.2"
 }
 
 // Create the executable jar and exclude some certificates
@@ -82,30 +83,12 @@ jar {
     }
 }
 
-docker {
-    baseImage "java:8"
-    maintainer 'Daniel Viveiros "viveiros@ciandt.com"'
-}
-
 /**
  * Updates the docker image
  */
 task backendDocker(dependsOn: installDist, type: Exec) {
     commandLine 'docker', 'build', '-t', "$containerImage", '-f', './Dockerfile', '.'
 }
-
-/*
-task backendDocker(dependsOn: installDist, type: Docker) {
-    applicationName = "$gcpProject/$serviceName"
-    tagVersion = containerTag
-    addFile("build/install/$serviceName/", '/usr/src/app')
-    addFile('src/main/resources/application.yml', '/usr/src/app/application.yml')
-    addFile('src/main/resources/application-dev.yml', '/usr/src/app/application-dev.yml')
-    addFile('src/main/resources/application-prd.yml', '/usr/src/app/application-prd.yml')
-    exposePort(8080)
-    exposePort(8081)
-    defaultCommand(["/usr/src/app/bin/$serviceName", '--env=$ENV', '--spring.profiles.active=$ENV'])
-}*/
 
 /**
  * Runs the server locally

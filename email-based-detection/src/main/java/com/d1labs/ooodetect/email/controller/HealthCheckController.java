@@ -1,5 +1,7 @@
 package com.d1labs.ooodetect.email.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -12,14 +14,19 @@ import javax.servlet.http.HttpServletResponse;
  * Class that provides an endpoint for health checking
  */
 @RestController
-@RequestMapping(value="/api/healthcheck/v1")
+@RequestMapping(value="/api/ooo-detect/v1/healthcheck")
 public class HealthCheckController {
 
-    @RequestMapping(value="/ping", method= RequestMethod.GET)
+    static Logger logger = LoggerFactory.getLogger(HealthCheckController.class.getName());
+
+    @RequestMapping(value="", method= RequestMethod.GET)
     public ResponseEntity<HealthCheckResponse> ping() {
+
+        logger.info( "Request received for healthcheck... returning that everything is OK");
 
         HealthCheckResponse response = new HealthCheckResponse( "Services are running OK",
                 System.currentTimeMillis(), HttpServletResponse.SC_OK);
+
         return ResponseEntity.ok(response);
     }
 

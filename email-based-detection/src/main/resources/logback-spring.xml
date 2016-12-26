@@ -9,10 +9,23 @@
         </layout>
     </appender>
 
-    <springProfile name="local, dev">
+    <appender name="loggly" class="ch.qos.logback.ext.loggly.LogglyAppender">
+        <endpointUrl>http://logs-01.loggly.com/inputs/8cd0b7cb-1fd5-49c7-9622-c9616edcee28/tag/logback</endpointUrl>
+        <pattern>%d{"ISO8601", UTC}  %p %t %c{0}.%M - %m%n</pattern>
+    </appender>
+
+    <springProfile name="local">
         <logger name="com.d1labs" level="debug"
                 additivity="false">
             <appender-ref ref="STDOUT" />
+        </logger>
+    </springProfile>
+
+    <springProfile name="dev">
+        <logger name="com.d1labs" level="debug"
+                additivity="false">
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="loggly" />
         </logger>
     </springProfile>
 
@@ -20,6 +33,7 @@
         <logger name="com.d1labs" level="info"
                 additivity="false">
             <appender-ref ref="STDOUT" />
+            <appender-ref ref="loggly" />
         </logger>
     </springProfile>
 
