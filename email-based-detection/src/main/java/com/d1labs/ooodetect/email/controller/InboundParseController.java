@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value="/inbound")
+@RequestMapping(value="/api/inbound/v1")
 public class InboundParseController {
 
     private final InboundService inboundService;

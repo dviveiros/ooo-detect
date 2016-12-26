@@ -6,3 +6,10 @@ evaluationDependsOn(':email-based-detection')
 task runEmailDetection {
     dependsOn ":email-based-detection:bootRun"
 }
+
+/**
+ * Deploys the container with e-mail detection service
+ */
+task deployEmailDetection {
+    dependsOn ":email-based-detection:redeployDevBackend"
+}

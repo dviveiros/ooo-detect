@@ -1,6 +1,8 @@
 //plugins
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
+apply plugin: 'application'
+apply plugin: 'docker'
 
 // Use Java 8 by default
 sourceCompatibility = 1.8
@@ -8,9 +10,22 @@ targetCompatibility = 1.8
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
+// Service name
+def serviceName = "ooo-email-detect"
+
 // Version & Group
-group "$groupId"
-version "$versionNumber"
+version '0.1'
+group 'gcr.io'
+
+// Archive base name
+archivesBaseName = "$serviceName"
+
+// Main class to be executed
+mainClassName = "com.d1labs.ooodetect.email.Application"
+
+// Container tag
+def containerTag = getDate()
+def containerImage = "gcr.io/$gcpProject/$serviceName:$containerTag"
 
 buildscript {
     repositories {
@@ -23,6 +38,7 @@ buildscript {
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
         classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+        classpath "se.transmode.gradle:gradle-docker:$gradleDockerVersion"
     }
 }
 
@@ -48,10 +64,83 @@ dependencies {
     optional("org.springframework.boot:spring-boot-configuration-processor")
 }
 
+// Create the executable jar and exclude some certificates
+jar {
+    manifest {
+        attributes "Implementation-Title": "Email Detection"
+        attributes "Main-Class": mainClassName
+    }
+
+    // remove the security files (from mail.jar / activation.jar) so that the jar will be executable.
+    doFirst {
+        from(configurations.runtime.resolve().collect { it.isDirectory() ? it : zipTree(it) }) {
+            exclude 'META-INF/MANIFEST.MF'
+            exclude 'META-INF/*.SF'
+            exclude 'META-INF/*.DSA'
+            exclude 'META-INF/*.RSA'
+        }
+    }
+}
+
+docker {
+    baseImage "java:8"
+    maintainer 'Daniel Viveiros "viveiros@ciandt.com"'
+}
+
+/**
+ * Updates the docker image
+ */
+task backendDocker(dependsOn: installDist, type: Exec) {
+    commandLine 'docker', 'build', '-t', "$containerImage", '-f', './Dockerfile', '.'
+}
+
+/*
+task backendDocker(dependsOn: installDist, type: Docker) {
+    applicationName = "$gcpProject/$serviceName"
+    tagVersion = containerTag
+    addFile("build/install/$serviceName/", '/usr/src/app')
+    addFile('src/main/resources/application.yml', '/usr/src/app/application.yml')
+    addFile('src/main/resources/application-dev.yml', '/usr/src/app/application-dev.yml')
+    addFile('src/main/resources/application-prd.yml', '/usr/src/app/application-prd.yml')
+    exposePort(8080)
+    exposePort(8081)
+    defaultCommand(["/usr/src/app/bin/$serviceName", '--env=$ENV', '--spring.profiles.active=$ENV'])
+}*/
+
+/**
+ * Runs the server locally
+ */
 bootRun {
     if (project.hasProperty('env')) {
         args = ["--env=$env", "--spring.profiles.active=$env"]
     } else {
         args = ['--env=local', "--spring.profiles.active=local"]
     }
+}
+
+/**
+ * Push the docker image to Google Registry
+ */
+task pushBackendDockerImage(dependsOn: backendDocker, type: Exec) {
+    //command to be executed
+    commandLine 'gcloud', 'docker', '--', 'push', "$containerImage"
+}
+
+/**
+ * Redeploys the DEV environment
+ */
+task redeployDevBackend(dependsOn: pushBackendDockerImage, type: Exec) {
+    //command to be executed
+    workingDir "$projectDir/../scripts"
+    commandLine "$projectDir/../scripts/redeploy-dev.sh"
+    args "$containerImage"
+}
+
+/**
+ * Returns the date in a format that can be used as container tag
+ */
+def getDate() {
+    def date = new Date()
+    def formattedDate = date.format('yyyyMMddHHmmss')
+    return formattedDate
 }

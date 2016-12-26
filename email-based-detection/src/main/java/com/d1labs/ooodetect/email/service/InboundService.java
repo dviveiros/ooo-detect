@@ -14,7 +14,6 @@ public class InboundService {
 
     static Logger logger = LoggerFactory.getLogger(InboundService.class.getName());
 
-    @Autowired
     public InboundService() {
     }
 
